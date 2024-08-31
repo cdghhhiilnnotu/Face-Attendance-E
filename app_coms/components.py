@@ -18,7 +18,6 @@ class FaceRecogition:
     def predict_proba(self, img):
         y_pred = self.facenet.embeddings(img)
         return np.round(self.model.predict_proba(y_pred).max(), 2)
-        # return np.round(np.max(self.model.predict(y_pred)), 2)
     
     def predict(self, img):
         y_pred = self.facenet.embeddings(img)

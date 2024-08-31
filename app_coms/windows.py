@@ -1,6 +1,6 @@
 # From Python
 from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkScrollableFrame, CTk as ctk
-from threading import Thread, Event
+from threading import Thread
 from PIL import Image, ImageTk
 from tkinter import Label
 import sys
@@ -11,6 +11,7 @@ import random
 # Belong to the project
 from app_coms.defaults import *
 from app_coms.tech_sp import *
+from app_coms.components import *
 
 class AppMain:
     
@@ -210,10 +211,12 @@ class CameraFrame(AppFrame):
     def __init__(self, root, root_frame):
         super().__init__(root, root_frame)
 
+        self.haar = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+        self.face_reg = FaceRecogition()
+        self.face_reg.load_models(AppData.MODEL_PATH, AppData.EMBED_PATH, AppData.CLASSES_PATH)
+
     def setup(self):
         self.camera_running = False
-
-        self.cap = cv2.VideoCapture(AppSpec.CAMERA_INDEX)
 
         self.camera_label = CTkLabel(self, text="",width=560, height=315, corner_radius=10, fg_color=AppColors.BLACK, bg_color=AppColors.BACKGROUND0)
         self.camera_label.place(x=135, y=15)
@@ -239,7 +242,7 @@ class CameraFrame(AppFrame):
     def open_camera(self):
         if not self.camera_running:
             self.camera_label.configure(corner_radius=0, fg_color=AppColors.BACKGROUND0)
-            self.cap = cv2.VideoCapture(1)
+            self.cap = cv2.VideoCapture(AppSpec.CAMERA_INDEX)
             self.camera_running = True
             self.update_frame()
 
@@ -249,13 +252,41 @@ class CameraFrame(AppFrame):
 
             _, frame = self.cap.read()
             frame = cv2.flip(frame, 1)
+            print(frame.shape)
 
             opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+
+            # Recognition Area
+            # try:
+            #     opencv_image = self.recognize(opencv_image)
+            # except:
+            #     pass
+
             captured_image = Image.fromarray(opencv_image)
 
             TechSupports.display_to_label(self.camera_label, captured_image)
 
             self.camera_label.after(10, self.update_frame)
+
+    def recognize(self, frame):
+        opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        faces = self.haar.detectMultiScale(gray_img, 1.3, 5)
+
+        for x, y, w, h in faces:
+            img = opencv_image[y:y+h, x:x+w]
+            img = cv2.resize(img, (160, 160))
+            img = np.expand_dims(img, axis=0)
+            
+            face_score = self.face_reg.predict_proba(img)
+            if float(face_score) > 0.8:
+                face_name = self.face_reg.predict(img)
+                
+                cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
+                cv2.putText(opencv_image, f'{face_name} - {face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+
+        return opencv_image
 
     def close_camera(self):
         if self.camera_running:
@@ -329,20 +360,21 @@ class RecognitionThread(Thread):
     
     def run(self):
         # Get API here
-        while self.frame:
-            try:
-                num_rand = random.randint(1,100)
-                reg_list = []
-                num_rand = random.randint(1,3)
-                for i in range(num_rand):
-                    reg_list.append({"maso":f"Ma so {i}",
-                                    "thoigian": f"Thoi gian {i}"})
+        # while self.frame:
+        #     try:
+        #         num_rand = random.randint(1,100)
+        #         reg_list = []
+        #         num_rand = random.randint(1,3)
+        #         for i in range(num_rand):
+        #             reg_list.append({"maso":f"Ma so {i}",
+        #                             "thoigian": f"Thoi gian {i}"})
                 
-                self.frame.items = reg_list
-                self.frame.show_table()
-            except tk.TclError:
-                pass
-            time.sleep(5)
+        #         self.frame.items = reg_list
+        #         self.frame.show_table()
+        #     except tk.TclError:
+        #         pass
+        #     time.sleep(5)
+        pass
             
 
     def showing(self):
