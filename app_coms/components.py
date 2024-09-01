@@ -1,6 +1,7 @@
 from keras_facenet import FaceNet
 import pickle
 import numpy as np
+import xgboost as xgb
 
 class FaceRecogition:
 
@@ -21,4 +22,6 @@ class FaceRecogition:
     
     def predict(self, img):
         y_pred = self.facenet.embeddings(img)
-        return str(self.classes[int(self.model.predict(y_pred))])
+        class_name = self.classes[int(self.model.predict(y_pred))]
+        class_name = class_name.decode('utf-8')
+        return class_name

@@ -19,12 +19,11 @@ class AppSpec:
     LOGO = ".\\resources\\app_logo.png"
     ICON_SIZE = 20
     TITLE_BAR = 50
-    CAMERA_INDEX = 0
+    CAMERA_INDEX = 1
 
 class AppData:
     MODEL_PATH = ".\\inputs\\hau_face_model.pkl"
     CLASSES_PATH = ".\\inputs\\hau_face_classes.npy"
     EMBED_PATH = ".\\inputs\\hau_face_embedded.npz"
     HAAR_PATH = ".\\inputs\\haarcascade_frontalface_default.xml"
-
 

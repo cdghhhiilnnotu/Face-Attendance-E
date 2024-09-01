@@ -211,7 +211,7 @@ class CameraFrame(AppFrame):
     def __init__(self, root, root_frame):
         super().__init__(root, root_frame)
 
-        self.haar = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+        self.haar = cv2.CascadeClassifier(AppData.HAAR_PATH)
         self.face_reg = FaceRecogition()
         self.face_reg.load_models(AppData.MODEL_PATH, AppData.EMBED_PATH, AppData.CLASSES_PATH)
 
@@ -252,24 +252,22 @@ class CameraFrame(AppFrame):
 
             _, frame = self.cap.read()
             frame = cv2.flip(frame, 1)
-            print(frame.shape)
-
-            opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
 
             # Recognition Area
             # try:
             #     opencv_image = self.recognize(opencv_image)
             # except:
             #     pass
+            opencv_image = self.recognize(frame)
 
             captured_image = Image.fromarray(opencv_image)
 
             TechSupports.display_to_label(self.camera_label, captured_image)
 
-            self.camera_label.after(10, self.update_frame)
+            self.camera_label.after(1, self.update_frame)
 
     def recognize(self, frame):
-        opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.haar.detectMultiScale(gray_img, 1.3, 5)
@@ -284,7 +282,7 @@ class CameraFrame(AppFrame):
                 face_name = self.face_reg.predict(img)
                 
                 cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
-                cv2.putText(opencv_image, f'{face_name} - {face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+                cv2.putText(opencv_image, f'{face_name}-{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
 
         return opencv_image
 
