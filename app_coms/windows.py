@@ -7,6 +7,7 @@ import sys
 import cv2
 import time
 import random
+from datetime import datetime
 
 # Belong to the project
 from app_coms.defaults import *
@@ -20,10 +21,11 @@ class AppMain:
         self.icon = icon
         self.app = ctk()
         self.app.overrideredirect(True)
+        self.reg_list = []
 
         TechSupports.transparent_color(self.app, AppColors.TRANSPARENT)
 
-        self.reg_thread = RecognitionThread()
+        self.reg_thread = RecognitionThread(self)
 
         self.setup()
 
@@ -45,6 +47,14 @@ class AppMain:
         self.app.destroy()
         sys.exit()
 
+    def reset_summary(self):
+        self.reg_thread.reset_summary()
+
+    def pause_thread(self):
+        self.reg_thread.update_sign = False
+
+    def start_thread(self):
+        self.reg_thread.update_sign = True
 
 class AppTitleBar(CTkFrame):
 
@@ -240,6 +250,7 @@ class CameraFrame(AppFrame):
         self.results_btn.place(x=365, y=345)
 
     def open_camera(self):
+        self.root.reset_summary()
         if not self.camera_running:
             self.camera_label.configure(corner_radius=0, fg_color=AppColors.BACKGROUND0)
             self.cap = cv2.VideoCapture(AppSpec.CAMERA_INDEX)
@@ -271,7 +282,7 @@ class CameraFrame(AppFrame):
         gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.haar.detectMultiScale(gray_img, 1.3, 5)
-
+        self.root.start_thread()
         for x, y, w, h in faces:
             img = opencv_image[y:y+h, x:x+w]
             img = cv2.resize(img, (160, 160))
@@ -283,6 +294,14 @@ class CameraFrame(AppFrame):
                 
                 cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
                 cv2.putText(opencv_image, f'{face_name}-{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+
+                now = datetime.now()
+                current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+
+                self.root.reg_list.append({'maso': face_name,
+                                           'thoigian': current_time})
+        
+        self.root.pause_thread()
 
         return opencv_image
 
@@ -352,29 +371,30 @@ class SummaryFrame(AppFrame):
 
 class RecognitionThread(Thread):
 
-    def __init__(self):
+    def __init__(self, root):
         super().__init__()
+        self.root = root
         self.frame = None
+        self.update_sign = False
     
     def run(self):
         # Get API here
         # while self.frame:
-        #     try:
-        #         num_rand = random.randint(1,100)
-        #         reg_list = []
-        #         num_rand = random.randint(1,3)
-        #         for i in range(num_rand):
-        #             reg_list.append({"maso":f"Ma so {i}",
-        #                             "thoigian": f"Thoi gian {i}"})
-                
-        #         self.frame.items = reg_list
-        #         self.frame.show_table()
-        #     except tk.TclError:
-        #         pass
-        #     time.sleep(5)
+        #     if self.update_sign:
+        #         try:
+        #             self.frame.items = self.root.reg_list
+        #             self.frame.show_table()
+        #         except:
+        #             pass
         pass
-            
 
+    def reset_summary(self):
+        try:
+            # self.frame.clear_table()
+            pass
+        except:
+            pass
+            
     def showing(self):
         print("Summary")
 
