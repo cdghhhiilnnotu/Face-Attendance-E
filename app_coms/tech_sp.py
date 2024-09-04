@@ -3,6 +3,10 @@ from customtkinter import CTk as ctk
 import tkinter as tk
 from customtkinter import CTkLabel
 from PIL import Image, ImageTk, ImageDraw
+from CTkMessagebox import CTkMessagebox
+import os
+import cv2
+from datetime import datetime
 
 class TechSupports:
 
@@ -42,5 +46,22 @@ class TechSupports:
         label.photo_image = photo_image
         label.configure(image=photo_image)
 
+    def export_image(image, dir):
+        now = datetime.now()
+        current_time = now.strftime("%Y%m%d")
+        output_dir = f'.\\outputs\\{current_time}\\{dir}'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        output_file = os.path.join(output_dir, f'{len(os.listdir(output_dir))}.png')
+        cv2.imwrite(output_file, image)
+
+        return output_dir
+    
+    def open_folder(folder_path):
+        try:
+            os.startfile(folder_path)
+        except:
+            CTkMessagebox(title="Error", message="Error when try to open folder!", icon="cancel")
 
 

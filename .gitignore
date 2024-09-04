@@ -163,6 +163,7 @@ applib/
 fonts/
 app.py
 test.py
+outputs/
 
 
 

@@ -25,36 +25,41 @@ class AppMain:
 
         TechSupports.transparent_color(self.app, AppColors.TRANSPARENT)
 
-        self.reg_thread = RecognitionThread(self)
-
         self.setup()
 
     def setup(self):
-        title_bar = AppTitleBar(self, self.title)
-        title_bar.pack(fill="x")
 
-        window = AppWindow(self)
-        window.pack(fill="x")
+        self.title_bar = AppTitleBar(self, self.title)
+        self.title_bar.pack(fill="x")
+
+        self.window = AppWindow(self)
+        self.window.pack(fill="x")
+
+        intro_frame = IntroFrame(self, self.window)
+        # intro_frame.pack(padx=5, pady=5)
+        intro_frame.place(x=5, y=5)
+        # self.window.sub_frame.append(intro_frame)
+
+        cam_frame = CameraFrame(self, self.window)
+        # cam_frame.pack(padx=5, pady=5)
+        cam_frame.place(x=AppSpec.WIDTH+5, y=5)
+        # self.window.sub_frame.append(cam_frame)
+
+        sum_frame = SummaryFrame(self, self.window)
+        # sum_frame.pack(padx=5, pady=5)
+        sum_frame.place(x=AppSpec.WIDTH+5, y=5)
+        # self.window.sub_frame.append(sum_frame)
 
         self.app.geometry(f"{AppSpec.WIDTH}x{AppSpec.HEIGHT}")
 
+    def update_summary(self):
+        self.window.sub_frame[2].update(self.reg_list[-1])
+
     def run(self):
-        self.reg_thread.start()
         self.app.mainloop()
 
     def stop(self):
-        self.reg_thread.stop()
         self.app.destroy()
-        sys.exit()
-
-    def reset_summary(self):
-        self.reg_thread.reset_summary()
-
-    def pause_thread(self):
-        self.reg_thread.update_sign = False
-
-    def start_thread(self):
-        self.reg_thread.update_sign = True
 
 class AppTitleBar(CTkFrame):
 
@@ -139,20 +144,7 @@ class AppWindow(CTkFrame):
         self.setup()
 
     def setup(self):
-        self.intro_frame = IntroFrame(self.root, self)
-        self.intro_frame.pack(padx=5, pady=5)
-        self.intro_frame.place(x=5, y=5)
-        self.sub_frame.append(self.intro_frame)
-
-        self.cam_frame = CameraFrame(self.root, self)
-        self.cam_frame.pack(padx=5, pady=5)
-        self.cam_frame.place(x=AppSpec.WIDTH+5, y=5)
-        self.sub_frame.append(self.cam_frame)
-
-        self.sum_frame = SummaryFrame(self.root, self)
-        self.sum_frame.pack(padx=5, pady=5)
-        self.sum_frame.place(x=AppSpec.WIDTH+5, y=5)
-        self.sub_frame.append(self.sum_frame)
+        pass
 
     def switch_frame(self, index):
         for i in range(len(self.sub_frame)):
@@ -168,11 +160,11 @@ class AppFrame(CTkLabel):
         self.root = root
         self.root_frame = root_frame
         super().__init__(self.root_frame, width=AppSpec.WIDTH-10, height=AppSpec.HEIGHT-AppSpec.TITLE_BAR-10, corner_radius=5, fg_color=AppColors.BACKGROUND0)
-
         self.setup()
 
     def setup(self):
-        pass
+        self.pack(padx=5, pady=5)
+        self.root_frame.sub_frame.append(self)
 
     def start(self):
         pass
@@ -185,19 +177,22 @@ class AppFrame(CTkLabel):
 
 class TableItem:
 
-    def __init__(self, name:str, time:str, table:CTkFrame):
+    def __init__(self, item: dict, table:CTkFrame):
         self.frame = CTkFrame(table)
         self.frame.pack(fill="x")
 
-        self.name_label = CTkLabel(self.frame, text=name, height=30, width=200, fg_color=AppColors.BLACK, font=(AppSpec.FONT, 15), text_color=AppColors.WHITE, corner_radius=2)
+        self.name_label = CTkLabel(self.frame, text=item['maso'], height=30, width=200, fg_color=AppColors.BLACK, font=(AppSpec.FONT, 15), text_color=AppColors.WHITE, corner_radius=2)
         self.name_label.pack(side="left", padx=(0,2))
         self.name_label.place(x=5, y=5)
 
-        self.time_label = CTkLabel(self.frame, text=time, height=30, width=300, fg_color=AppColors.BLACK, font=(AppSpec.FONT, 15), text_color=AppColors.WHITE, corner_radius=2)
+        self.time_label = CTkLabel(self.frame, text=item['thoigian'], height=30, width=300, fg_color=AppColors.BLACK, font=(AppSpec.FONT, 15), text_color=AppColors.WHITE, corner_radius=2)
         self.time_label.pack(side="left", padx=(0,5))
         self.time_label.place(x=210, y=5)
 
-        self.detail_btn = CTkButton(self.frame, text = "<3",height=30, width=40, fg_color=AppColors.GREEN, font=(AppSpec.FONT, 15, "bold"), text_color=AppColors.BLACK, corner_radius=5)
+        self.detail_btn = CTkButton(self.frame, text = "<3",height=30, width=40, 
+                                    fg_color=AppColors.GREEN, font=(AppSpec.FONT, 15, "bold"), 
+                                    text_color=AppColors.BLACK, corner_radius=5,
+                                    command=lambda: TechSupports.open_folder(item['output']))
         self.detail_btn.pack(side="right", padx=5, pady=5)
 
 
@@ -207,6 +202,7 @@ class IntroFrame(AppFrame):
         super().__init__(root, root_frame)
         
     def setup(self):
+        super().setup()
         # Start Button
         self.start_btn = CTkButton(self, text="Start",cursor="hand2", text_color=AppColors.BLACK,
                   corner_radius=200, fg_color=AppColors.RED,
@@ -226,6 +222,7 @@ class CameraFrame(AppFrame):
         self.face_reg.load_models(AppData.MODEL_PATH, AppData.EMBED_PATH, AppData.CLASSES_PATH)
 
     def setup(self):
+        super().setup()
         self.camera_running = False
 
         self.camera_label = CTkLabel(self, text="",width=560, height=315, corner_radius=10, fg_color=AppColors.BLACK, bg_color=AppColors.BACKGROUND0)
@@ -250,7 +247,7 @@ class CameraFrame(AppFrame):
         self.results_btn.place(x=365, y=345)
 
     def open_camera(self):
-        self.root.reset_summary()
+        # self.root.reset_summary()
         if not self.camera_running:
             self.camera_label.configure(corner_radius=0, fg_color=AppColors.BACKGROUND0)
             self.cap = cv2.VideoCapture(AppSpec.CAMERA_INDEX)
@@ -265,10 +262,6 @@ class CameraFrame(AppFrame):
             frame = cv2.flip(frame, 1)
 
             # Recognition Area
-            # try:
-            #     opencv_image = self.recognize(opencv_image)
-            # except:
-            #     pass
             opencv_image = self.recognize(frame)
 
             captured_image = Image.fromarray(opencv_image)
@@ -282,7 +275,7 @@ class CameraFrame(AppFrame):
         gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.haar.detectMultiScale(gray_img, 1.3, 5)
-        self.root.start_thread()
+        # self.root.start_thread()
         for x, y, w, h in faces:
             img = opencv_image[y:y+h, x:x+w]
             img = cv2.resize(img, (160, 160))
@@ -295,14 +288,22 @@ class CameraFrame(AppFrame):
                 cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
                 cv2.putText(opencv_image, f'{face_name}-{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
 
+                output_image = frame
+                cv2.rectangle(output_image, (x,y), (x+w, y+h), (255,0,255), 10)
+                cv2.putText(output_image, f'{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+
                 now = datetime.now()
                 current_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                self.root.reg_list.append({'maso': face_name,
-                                           'thoigian': current_time})
-        
-        self.root.pause_thread()
+                output_dir = TechSupports.export_image(output_image, str(face_name))
 
+                face_list = [reg['maso'] for reg in self.root.reg_list]
+                if str(face_name) not in face_list:
+                    self.root.reg_list.append({'maso': face_name,
+                                            'thoigian': current_time,
+                                            'output': output_dir})
+                    self.root.update_summary()
+    
         return opencv_image
 
     def close_camera(self):
@@ -322,7 +323,7 @@ class CameraFrame(AppFrame):
             self.close_camera()
 
     def close(self):
-        self.close_camera()
+        # self.close_camera()
         super().close()
 
 class SummaryFrame(AppFrame):
@@ -330,9 +331,9 @@ class SummaryFrame(AppFrame):
     def __init__(self, root, root_frame):
         super().__init__(root, root_frame)
         self.items = []
-        root.reg_thread.frame = self
 
     def setup(self):
+        super().setup()
         self.header_frame = CTkFrame(self, height=40, width=580, fg_color="#1A1A1A")
         self.header_frame.place(x=130, y=50)
 
@@ -356,48 +357,18 @@ class SummaryFrame(AppFrame):
         self.show_table()
 
     def show_table(self):
-        self.clear_table()
-        for item in self.items:
-            TableItem(item['maso'], item['thoigian'], self.table_frame)
-
-    def clear_table(self):
-        for widget in self.table_frame.winfo_children():
-            widget.destroy()
-
-    def close(self):
-        self.clear_table()
-        super().close()
-
-
-class RecognitionThread(Thread):
-
-    def __init__(self, root):
-        super().__init__()
-        self.root = root
-        self.frame = None
-        self.update_sign = False
-    
-    def run(self):
-        # Get API here
-        # while self.frame:
-        #     if self.update_sign:
-        #         try:
-        #             self.frame.items = self.root.reg_list
-        #             self.frame.show_table()
-        #         except:
-        #             pass
+        # for item in self.items:
+        #     TableItem(item, self.table_frame)
         pass
 
-    def reset_summary(self):
-        try:
-            # self.frame.clear_table()
-            pass
-        except:
-            pass
-            
-    def showing(self):
-        print("Summary")
+    def update(self, item):
+        TableItem(item, self.table_frame)
 
-    def stop(self):
-        self.frame = None
-        self.join()
+    def clear_table(self):
+        # for widget in self.table_frame.winfo_children():
+        #     widget.destroy()
+        pass
+
+    def close(self):
+        # self.clear_table()
+        super().close()
