@@ -10,12 +10,14 @@ class AppColors:
     BACKGROUND1 = "#212121"
     BACKGROUNDBAR = "#202022"
     BACKGROUNDTABLE = "#DBDBDB"
+    BUTTON_HOVER = "#3B8ED0"
 
 class AppSpec:
     WIDTH = 840
     HEIGHT = 480
-    FONT= "Candara"
-    FONT= "Comic Sans MS"
+    # FONT= "Candara"
+    FONT= "Roboto"
+    FONT_TITLE_W = ""
     LOGO = ".\\resources\\app_logo.png"
     ICON_SIZE = 20
     TITLE_BAR = 50

@@ -35,25 +35,33 @@ class AppMain:
         self.window = AppWindow(self)
         self.window.pack(fill="x")
 
-        intro_frame = IntroFrame(self, self.window)
-        # intro_frame.pack(padx=5, pady=5)
-        intro_frame.place(x=5, y=5)
-        # self.window.sub_frame.append(intro_frame)
+        self.intro_frame = IntroFrame(self, self.window)
+        # self.intro_frame.pack(padx=5, pady=5)
+        self.intro_frame.place(x=5, y=5)
+        # self.window.sub_frame.append(self.intro_frame)
 
-        cam_frame = CameraFrame(self, self.window)
+        self.main_frame = MainFrame(self, self.window)
+        self.main_frame.place(x=AppSpec.WIDTH+5, y=5)
+
+        cam_frame = CameraFrame(self, self.main_frame)
         # cam_frame.pack(padx=5, pady=5)
-        cam_frame.place(x=AppSpec.WIDTH+5, y=5)
-        # self.window.sub_frame.append(cam_frame)
+        cam_frame.place(x=150, y=0)
+        # self.main_frame.sub_frame.append(cam_frame)
 
-        sum_frame = SummaryFrame(self, self.window)
+        sum_frame = SummaryFrame(self, self.main_frame)
         # sum_frame.pack(padx=5, pady=5)
         sum_frame.place(x=AppSpec.WIDTH+5, y=5)
-        # self.window.sub_frame.append(sum_frame)
+        # self.main_frame.sub_frame.append(sum_frame)
+
+        # tab_frame = AppFrame(self, self.window, width=200, fg_color=AppColors.BACKGROUNDTABLE)
+        # # tab_frame.pack(padx=5, pady=5)
+        # tab_frame.place(x=5, y=6)
+        # # self.window.sub_frame.append(tab_frame)
 
         self.app.geometry(f"{AppSpec.WIDTH}x{AppSpec.HEIGHT}")
 
     def update_summary(self):
-        self.window.sub_frame[2].update(self.reg_list[-1])
+        self.main_frame.sub_frame[1].update(self.reg_list[-1])
 
     def run(self):
         self.app.mainloop()
@@ -90,7 +98,7 @@ class AppTitleBar(CTkFrame):
         self.icon_label.bind("<B1-Motion>", self.bar_move)
 
         # Window Title
-        self.bar_title = Label(self, text=self.title, font=(AppSpec.FONT, 15, "bold") ,
+        self.bar_title = Label(self, text=self.title, font=(AppSpec.FONT, 12, AppSpec.FONT_TITLE_W) ,
                                foreground=AppColors.BLACK, background=AppColors.WHITE)
         self.bar_title.bind("<ButtonPress-1>", self.bar_old_xy)
         self.bar_title.bind("<B1-Motion>", self.bar_move)
@@ -156,14 +164,17 @@ class AppWindow(CTkFrame):
 
 class AppFrame(CTkLabel):
 
-    def __init__(self, root, root_frame):
+    def __init__(self, root, root_frame, height=AppSpec.HEIGHT-AppSpec.TITLE_BAR-10, width=AppSpec.WIDTH-10, fg_color=AppColors.BACKGROUND0):
         self.root = root
         self.root_frame = root_frame
-        super().__init__(self.root_frame, width=AppSpec.WIDTH-10, height=AppSpec.HEIGHT-AppSpec.TITLE_BAR-10, corner_radius=5, fg_color=AppColors.BACKGROUND0)
+        super().__init__(self.root_frame, width=width, height=height, corner_radius=5, fg_color=fg_color)
         self.setup()
 
     def setup(self):
-        self.pack(padx=5, pady=5)
+        try:
+            self.pack(padx=5, pady=5)
+        except:
+            pass
         self.root_frame.sub_frame.append(self)
 
     def start(self):
@@ -215,7 +226,7 @@ class IntroFrame(AppFrame):
 class CameraFrame(AppFrame):
 
     def __init__(self, root, root_frame):
-        super().__init__(root, root_frame)
+        super().__init__(root, root_frame, width=AppSpec.WIDTH-160)
 
         self.haar = cv2.CascadeClassifier(AppData.HAAR_PATH)
         self.face_reg = FaceRecogition()
@@ -226,25 +237,25 @@ class CameraFrame(AppFrame):
         self.camera_running = False
 
         self.camera_label = CTkLabel(self, text="",width=560, height=315, corner_radius=10, fg_color=AppColors.BLACK, bg_color=AppColors.BACKGROUND0)
-        self.camera_label.place(x=135, y=15)
+        self.camera_label.place(x=60, y=15)
 
         self.camera_btn = CTkButton(self, text="Open", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
                                     command=self.camera, width=100, height=35,
                                     corner_radius=200, fg_color=AppColors.GREEN,
                                     hover_color=AppColors.GRAY)
-        self.camera_btn.place(x=165, y=345)
+        self.camera_btn.place(x=300, y=345)
 
-        self.exit_btn = CTkButton(self, text="Exit", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
-                                    command=lambda: self.root_frame.switch_frame(0), width=100, height=35,
-                                    corner_radius=200, fg_color=AppColors.RED,
-                                    hover_color=AppColors.GRAY)
-        self.exit_btn.place(x=565, y=345)
+        # self.exit_btn = CTkButton(self, text="Exit", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
+        #                             command=lambda: self.root_frame.switch_frame(0), width=100, height=35,
+        #                             corner_radius=200, fg_color=AppColors.RED,
+        #                             hover_color=AppColors.GRAY)
+        # self.exit_btn.place(x=565, y=345)
 
-        self.results_btn = CTkButton(self, text="Results", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
-                                   command=lambda: self.root_frame.switch_frame(2), width=100, height=35,
-                                    corner_radius=200, fg_color=AppColors.YELLOW,
-                                    hover_color=AppColors.GRAY)
-        self.results_btn.place(x=365, y=345)
+        # self.results_btn = CTkButton(self, text="Results", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
+        #                            command=lambda: self.root_frame.switch_frame(2), width=100, height=35,
+        #                             corner_radius=200, fg_color=AppColors.YELLOW,
+        #                             hover_color=AppColors.GRAY)
+        # self.results_btn.place(x=365, y=345)
 
     def open_camera(self):
         # self.root.reset_summary()
@@ -253,6 +264,7 @@ class CameraFrame(AppFrame):
             self.cap = cv2.VideoCapture(AppSpec.CAMERA_INDEX)
             self.camera_running = True
             self.update_frame()
+    
 
     def update_frame(self):
         if self.camera_running:
@@ -305,6 +317,7 @@ class CameraFrame(AppFrame):
                     self.root.update_summary()
     
         return opencv_image
+        # return frame
 
     def close_camera(self):
         if self.camera_running:
@@ -322,6 +335,9 @@ class CameraFrame(AppFrame):
         else:
             self.close_camera()
 
+    def open(self):
+        self.place(x=150, y=0)
+
     def close(self):
         # self.close_camera()
         super().close()
@@ -334,8 +350,9 @@ class SummaryFrame(AppFrame):
 
     def setup(self):
         super().setup()
+        
         self.header_frame = CTkFrame(self, height=40, width=580, fg_color="#1A1A1A")
-        self.header_frame.place(x=130, y=50)
+        self.header_frame.place(x=50, y=50)
 
         self.name_label = CTkLabel(self.header_frame, text = "Mã điểm danh",height=30, width=200, fg_color=AppColors.BACKGROUND0, font=(AppSpec.FONT, 15, "bold"), text_color=AppColors.WHITE, corner_radius=2)
         self.name_label.place(x=5, y=5)
@@ -344,16 +361,17 @@ class SummaryFrame(AppFrame):
         self.time_label.place(x=210, y=5)
 
         self.table_frame = CTkScrollableFrame(self, width=560, height=200, fg_color=AppColors.BACKGROUNDTABLE)
-        self.table_frame.place(x=124, y=90)
+        self.table_frame.place(x=54, y=90)
 
-        self.exit_btn = CTkButton(self, text="Exit", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
-                                    command=lambda: self.root_frame.switch_frame(1), width=100, height=35,
-                                    corner_radius=200, fg_color=AppColors.RED,
-                                    hover_color=AppColors.GRAY)
-        self.exit_btn.place(x=565, y=345)
+        # self.exit_btn = CTkButton(self, text="Exit", text_color=AppColors.BLACK, font=(AppSpec.FONT, 20, "bold"), 
+        #                             command=lambda: self.root_frame.switch_frame(1), width=100, height=35,
+        #                             corner_radius=200, fg_color=AppColors.RED,
+        #                             hover_color=AppColors.GRAY)
+        # self.exit_btn.place(x=565, y=345)
 
     def open(self):
         super().open()
+        self.place(x=150, y=0)
         self.show_table()
 
     def show_table(self):
@@ -372,3 +390,76 @@ class SummaryFrame(AppFrame):
     def close(self):
         # self.clear_table()
         super().close()
+
+# class TableFrame:
+
+#     def __init__(self):
+#         self.header_frame = CTkFrame(self, height=40, width=580, fg_color="#1A1A1A")
+#         self.header_frame.place(x=130, y=50)
+
+#         self.name_label = CTkLabel(self.header_frame, text = "Mã điểm danh",height=30, width=200, fg_color=AppColors.BACKGROUND0, font=(AppSpec.FONT, 15, "bold"), text_color=AppColors.WHITE, corner_radius=2)
+#         self.name_label.place(x=5, y=5)
+
+#         self.time_label = CTkLabel(self.header_frame, text="Thời gian điểm danh",height=30, width=300, fg_color=AppColors.BACKGROUND0, font=(AppSpec.FONT, 15, "bold"), text_color=AppColors.WHITE, corner_radius=2)
+#         self.time_label.place(x=210, y=5)
+
+#         self.table_frame = CTkScrollableFrame(self, width=560, height=200, fg_color=AppColors.BACKGROUNDTABLE)
+#         self.table_frame.place(x=124, y=90)
+
+class MainFrame(AppFrame):
+    
+    def __init__(self, root, root_frame):
+        self.sub_frame = []
+        self.frame_btn = []
+        super().__init__(root, root_frame, fg_color=AppColors.GRAY)
+        
+    def setup(self):
+        super().setup()
+
+        # Cam Button
+        self.cam_label = CTkLabel(self, text="HAU Event",
+                    width=140, height=30, 
+                    text_color=AppColors.WHITE,
+                    bg_color=AppColors.BLACK,
+                    font=(AppSpec.FONT, 18))
+        self.cam_label.place(x=5, y=5)
+
+        # Cam Button
+        self.cam_btn = CTkButton(self, text="Điểm danh",cursor="hand2", text_color=AppColors.GREEN,
+                    anchor="w",
+                    corner_radius=5,
+                    hover_color=AppColors.BUTTON_HOVER,
+                    fg_color=AppColors.GRAY,
+                    width=140, height=30, 
+                    font=(AppSpec.FONT, 18),
+                    command=lambda: self.switch_frame(0))
+        self.cam_btn.place(x=5, y=120)
+        self.frame_btn.append(self.cam_btn)
+
+        # Table Button
+        self.table_btn = CTkButton(self, text="Báo cáo",cursor="hand2", text_color=AppColors.BLACK,
+                    anchor="w",
+                    corner_radius=5,
+                    hover_color=AppColors.BUTTON_HOVER,
+                    fg_color=AppColors.GRAY,
+                    width=140, height=30, 
+                    font=(AppSpec.FONT, 18),
+                    command=lambda: self.switch_frame(1))
+        self.table_btn.place(x=5, y=155)
+        self.frame_btn.append(self.table_btn)
+
+        # Exit Button
+        self.exit_btn = CTkButton(self, text="Thoát",cursor="hand2", text_color=AppColors.BLACK,
+                  corner_radius=5,
+                  hover_color=AppColors.RED,
+                  fg_color=AppColors.GRAY,
+                  width=140, height=30, 
+                  font=(AppSpec.FONT, 18),
+                  command=lambda: self.root_frame.switch_frame(0))
+        self.exit_btn.place(x=5, y=390)
+
+    def switch_frame(self, index):
+        self.sub_frame[index].open()
+        self.sub_frame[1-index].close()
+        self.frame_btn[index].configure(text_color=AppColors.GREEN)
+        self.frame_btn[1-index].configure(text_color=AppColors.BLACK)
