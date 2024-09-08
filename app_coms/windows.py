@@ -6,9 +6,6 @@ from tkinter import Label
 from tkinter import PhotoImage
 import sys
 import cv2
-import time
-import random
-import threading
 from datetime import datetime
 
 # Belong to the project
