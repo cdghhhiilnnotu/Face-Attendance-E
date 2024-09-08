@@ -1,6 +1,6 @@
 from app_coms.windows import AppMain
 
-app = AppMain("Điểm danh sự kiện")
+app = AppMain("Trường Đại học Kiến Trúc Hà Nội")
 
 app.run()
 

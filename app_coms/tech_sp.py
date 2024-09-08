@@ -7,6 +7,7 @@ from CTkMessagebox import CTkMessagebox
 import os
 import cv2
 from datetime import datetime
+import pygame
 
 class TechSupports:
 
@@ -30,9 +31,10 @@ class TechSupports:
         
         TechSupports.display_to_label(label, img)
 
-    def display_to_label(label: CTkLabel, img):
+    def display_to_label(label: CTkLabel, img, label_width=0, label_height=0):
         # Resize the image to match the label's size
-        label_width, label_height = label.winfo_width(), label.winfo_height()
+        if label_width == 0 or label_height == 0:
+            label_width, label_height = label.winfo_width(), label.winfo_height()
         img = img.resize((label_width, label_height), Image.Resampling.LANCZOS)
 
         # Add rounded corners
@@ -63,5 +65,10 @@ class TechSupports:
             os.startfile(folder_path)
         except:
             CTkMessagebox(title="Error", message="Error when try to open folder!", icon="cancel")
+
+    def play_sound():
+        pygame.mixer.init()
+        pygame.mixer.music.load(r'.\resources\audios\congratulation.mp3')
+        pygame.mixer.music.play()
 
 

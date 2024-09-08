@@ -3,14 +3,21 @@ class AppColors:
     WHITE = "#FFF"
     BLACK = "#000"
     RED = "#FF0000"
+    EXIT_APP = "#FF000000"
     GRAY = "#b4b4b4"
     YELLOW = "#ffff00"
     GREEN = "#00ff00"
     BACKGROUND0 = "#1A1A1A"
     BACKGROUND1 = "#212121"
-    BACKGROUNDBAR = "#202022"
+    BACKGROUNDBAR = "#DDDDDD"
+    # BACKGROUNDBAR = "#202022"
     BACKGROUNDTABLE = "#DBDBDB"
     BUTTON_HOVER = "#3B8ED0"
+    # MENU = ""
+    DARK_BLUE = "#283049"
+    LIGHT_BLUE = "#3B8ED0"
+    DEACTIVE_TEXT = "#FFFFFF"
+    ACTIVE_TEXT = "#3B8ED0"
 
 class AppSpec:
     WIDTH = 840
