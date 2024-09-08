@@ -56,7 +56,7 @@ class AppMain:
         self.app.geometry(f"{AppSpec.WIDTH}x{AppSpec.HEIGHT}")
 
     def show_noti(self, name):
-        threading.Thread(target=TechSupports.play_sound).start()
+        # threading.Thread(target=TechSupports.play_sound).start()
         CustomMessageBox(self.app, title="Chào mừng!", name=name,icon=r'.\resources\cntt_logo100.png')
 
     def update_summary(self, name):
