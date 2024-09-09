@@ -53,6 +53,7 @@ class AppMain:
         self.app.geometry(f"{AppSpec.WIDTH}x{AppSpec.HEIGHT}")
 
     def show_noti(self, name):
+        print("noti")
         # threading.Thread(target=TechSupports.play_sound).start()
         CustomMessageBox(self.app, title="Chào mừng!", name=name,icon=r'.\resources\cntt_logo100.png')
 
@@ -349,6 +350,7 @@ class CameraFrame(AppFrame):
         self.haar = cv2.CascadeClassifier(AppData.HAAR_PATH)
         self.face_reg = FaceRecogition()
         self.face_reg.load_models(AppData.MODEL_PATH, AppData.EMBED_PATH, AppData.CLASSES_PATH)
+        self.frame_count = 0
 
     def setup(self):
         super().setup()
@@ -386,12 +388,12 @@ class CameraFrame(AppFrame):
     
     def update_frame(self):
         if self.camera_running:
-
+            self.frame_count += 1
             _, frame = self.cap.read()
             frame = cv2.flip(frame, 1)
 
             # Recognition Area
-            opencv_image = self.recognize(frame)
+            opencv_image = self.processing(frame)
 
             captured_image = Image.fromarray(opencv_image)
 
@@ -399,46 +401,79 @@ class CameraFrame(AppFrame):
 
             self.camera_label.after(1, self.update_frame)
 
-    def recognize(self, frame):
+    def processing(self, frame):
         opencv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.haar.detectMultiScale(gray_img, 1.5, 5)
 
-        for x, y, w, h in faces:
-            img = opencv_image[y:y+h, x:x+w]
-            img = cv2.resize(img, (160, 160))
-            img = np.expand_dims(img, axis=0)
-            
-            face_score = self.face_reg.predict_proba(img)
-            if float(face_score) > 0.8:
-                face_name = self.face_reg.predict(img)
+        opencv_image, i_faces = self.tracking(opencv_image, faces)
+        if self.frame_count == 10:
+            opencv_image = self.recognizing(i_faces, opencv_image, faces)
+        # if self.frame_count == 10:
+        #     for x, y, w, h in faces:
+        #         img = opencv_image[y:y+h, x:x+w]
+        #         img = cv2.resize(img, (160, 160))
+        #         img = np.expand_dims(img, axis=0)
                 
-                cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
-                cv2.putText(opencv_image, f'{face_name}-{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+        #         face_score = self.face_reg.predict_proba(img)
+        #         if float(face_score) > 0.8:
+        #             face_name = self.face_reg.predict(img)
+                    
+        #             cv2.rectangle(opencv_image, (x,y), (x+w, y+h), (255,0,255), 10)
+        #             cv2.putText(opencv_image, f'{face_name}-{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
 
-                output_image = frame
-                cv2.rectangle(output_image, (x,y), (x+w, y+h), (255,0,255), 10)
-                cv2.putText(output_image, f'{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+        #             output_image = frame
+        #             cv2.rectangle(output_image, (x,y), (x+w, y+h), (255,0,255), 10)
+        #             cv2.putText(output_image, f'{face_score}', (x,y-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
 
-                now = datetime.now()
-                current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+        #             now = datetime.now()
+        #             current_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                output_dir = TechSupports.export_image(output_image, str(face_name))
+        #             output_dir = TechSupports.export_image(output_image, str(face_name))
 
-                face_list = [reg['maso'] for reg in self.root.reg_list]
-                if str(face_name) not in face_list:
-                    print("hello")
-                    self.root.reg_list.append({'maso': face_name,
-                                            'thoigian': current_time,
-                                            'output': output_dir})
-                    self.root.update_summary(face_name)
-                    # self.thread = threading.Thread(target=self.root.show_noti)
-                    # self.thread.start()
-                    # self.root.show_noti()
-    
+        #             face_list = [reg['maso'] for reg in self.root.reg_list]
+        #             if str(face_name) not in face_list:
+        #                 print("hello")
+        #                 self.root.reg_list.append({'maso': face_name,
+        #                                         'thoigian': current_time,
+        #                                         'output': output_dir})
+        #                 self.root.update_summary(face_name)
+        #                 # self.thread = threading.Thread(target=self.root.show_noti)
+        #                 # self.thread.start()
+        #                 # self.root.show_noti()
+        #     self.frame_count = 0
+        # else:
+            # opencv_image = frame
         return opencv_image
         # return frame
+
+    def tracking(self, image, faces):
+        face_imgs = []
+        for x, y, w, h in faces:
+            img = image[y:y+h, x:x+w]
+            img = cv2.resize(img, (160, 160))
+            face_imgs.append(img)
+            # img = np.expand_dims(img, axis=0)
+            
+            cv2.rectangle(image, (x,y), (x+w, y+h), (255,0,255), 5)
+        return image, np.array(face_imgs)
+
+    def recognizing(self, i_faces, image, faces):
+        print(i_faces.shape)
+        face_names = self.face_reg.predict(i_faces)
+        face_scores = self.face_reg.predict_proba(i_faces)
+        face_indexs = np.where(face_scores > 0.85)
+        
+        for i in face_indexs:
+            cv2.putText(image, f'{face_names[i]}-{face_scores[i]}', (faces[i][0],faces[i][1]-10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 3, cv2.LINE_AA)
+        # for x, y, w, h in faces:
+        #     img = image[y:y+h, x:x+w]
+        #     img = cv2.resize(img, (160, 160))
+        #     img = np.expand_dims(img, axis=0)
+            
+        #     cv2.rectangle(image, (x,y), (x+w, y+h), (255,0,255), 5)
+        return image
 
     def close_camera(self):
         if self.camera_running:
